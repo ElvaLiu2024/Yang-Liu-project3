@@ -1,0 +1,25 @@
+.reset-button {
+    padding: 1rem 2rem;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    width: 300px;
+    margin-bottom: 1rem;
+    background-color: #f67a06;
+    color: white;
+}
+
+.reset-button:hover {
+    background-color:#001f3f; 
+    transform: scale(1.5);
+}
+
+@media (max-width: 576px) {
+    .reset-button {
+       font-size: 0.7rem;
+        font-weight: bold;
+    }
+}

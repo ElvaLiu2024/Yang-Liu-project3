@@ -1,0 +1,157 @@
+.rules-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+    background-color: #f8f9fa; 
+    overflow-y: auto;
+   
+}
+
+.rules-content {
+    margin-top: 120px;
+    padding: 2rem 1rem;
+    text-align: center;
+    width: 80%;
+    max-width: 1200px;
+    background: white;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding-bottom: 100px;
+    
+}
+
+.rules-content h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #001f3f;
+    font-weight: bold;
+}
+
+
+.rules-section {
+    margin-bottom: 2rem;
+}
+
+.rules-section h2 {
+    font-size: 1.6rem;
+    color: #003366;
+    margin-bottom: 1rem;
+    border-bottom: 3px solid #1dd1a1;
+    display: inline-block;
+    padding-bottom: 5px;
+    
+}
+
+
+.rules-list {
+    text-align: left;
+    margin: 0 auto 2rem;
+    padding: 0 2rem;
+    max-width: 900px;
+    line-height: 1.8;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.rules-list li {
+    margin-bottom: 1rem;
+    list-style: inside decimal;
+}
+
+
+.mode-section {
+    margin-top: 1.6rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+}
+
+.mode-section h2 {
+    font-size: 1.6rem;
+    color: #003366;
+    margin-bottom: 1rem;
+    border-bottom: 3px solid #feca57;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+
+.mode-list {
+    text-align: left;
+    margin: 0 auto;
+    padding: 0 2rem;
+    max-width: 900px;
+    line-height: 1.8;
+    font-size: 1.2rem;
+    color: #444;
+}
+
+.mode-list li {
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+
+.connection {
+    margin: 2rem auto;
+    padding: 1rem;
+    background-color: #001f3f;
+    color: #fff;
+    max-width: 900px;
+    border-radius: 8px;
+}
+
+.connection p {
+    text-align: left;
+    line-height: 1.4;
+    font-size: 0.9rem;
+    margin: 0.5rem;
+}
+
+.connection a {
+    color: #1dd1a1;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.connection a:hover {
+    text-decoration: underline;
+}
+
+
+@media (max-width: 576px) {
+    .rules-container {
+        overflow-y: auto;
+    }
+    .rules-content {
+        width: 90%;
+        margin-top: 80px;
+        padding-bottom: 120px;
+       
+    }
+
+    .rules-content h1 {
+        font-size: 2rem;
+    }
+
+    .rules-section h2,
+    .mode-section h2 {
+        font-size: 1.6rem;
+    }
+
+    .rules-list,
+    .mode-list {
+        font-size: 1rem;
+    }
+
+    .connection {
+        padding: 0.8rem;
+        margin-bottom: 50px;
+    }
+
+    .connection p {
+        font-size: 0.8rem;
+    }
+}

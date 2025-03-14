@@ -1,0 +1,38 @@
+.board {
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: fit-content; 
+    min-width: 320px;
+    max-width: 400px;
+    
+
+
+.board h2 {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(10, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 1px; 
+    border: 2px solid #333;
+    width: fit-content; 
+    margin: 20px;
+
+}
+}
+
+@media (max-width: 576px) {
+    .grid {
+        grid-template-columns: repeat(10, 30px);
+        grid-template-rows: repeat(10, 30px);
+        gap: 1px;
+    }
+}
