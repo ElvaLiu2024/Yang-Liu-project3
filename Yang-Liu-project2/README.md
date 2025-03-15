@@ -45,5 +45,6 @@ It maybe almost 10days to prepare and debug the project.
 
 Bonus Features Attempted:
 ✅ Implemented AI attack logic with randomized targeting.
-✅ Ensured ship placements are hidden until hit.
-✅ Created a smooth restart experience with a full reset of the game state.
+✅ Click and Drag Setup
+✅ Local Storage
+✅ Early Submission
