@@ -35,6 +35,7 @@ const Game = () => {
     const [gameStarted, setGameStarted] = useState(loadGameState().gameStarted);
     const [timer, setTimer] = useState(loadGameState().timer);
     const [ships, setShips] = useState(loadGameState().ships);
+    const [revealedCells, setRevealedCells] = useState([]); 
 
     useEffect(() => {
         const gameState = { enemyGrid, playerGrid, orientation, gameStarted, timer, ships };
@@ -56,33 +57,36 @@ const Game = () => {
         return Object.values(ships).every(count => count === 0);
     };
 
-    const handleEnemyClick = (row, col) => {
-        if (!gameStarted || gameOver) return; 
+  const handleEnemyClick = (row, col) => {
+    if (!gameStarted || gameOver || revealedCells.includes(`${row}-${col}`)) return; 
 
-        setEnemyGrid(prevGrid => {
-            const newGrid = prevGrid.map(row => [...row]);
+    setRevealedCells(prev => [...prev, `${row}-${col}`]); 
 
-            if (newGrid[row][col] === "ship") {
-                newGrid[row][col] = "hit"; 
-            } else if (newGrid[row][col] === "empty") {
-                newGrid[row][col] = "miss"; 
-            }
+    setEnemyGrid(prevGrid => {
+        const newGrid = prevGrid.map(innerRow => [...innerRow]);
 
-            if (checkIfGameOver(newGrid)) {
-                setGameOver(true);
-                saveHighScore(timer); 
-                localStorage.removeItem("gameState");  
-            }
-
-            return newGrid;
-        });
-
-        if (mode === "normal" && !gameOver) {
-            setTimeout(() => {
-                setPlayerGrid(prevGrid => aiAttackPlayer(prevGrid));
-            }, 100);
+        if (newGrid[row][col] === "ship") {
+            newGrid[row][col] = "hit";  
+        } else if (newGrid[row][col] === "empty") {
+            newGrid[row][col] = "miss"; 
         }
-    };
+
+        if (checkIfGameOver(newGrid)) {
+            setGameOver(true);
+            saveHighScore(timer);
+            localStorage.removeItem("gameState");
+        }
+
+        return newGrid;
+    });
+
+    if (mode === "normal" && !gameOver) {
+        setTimeout(() => {
+            setPlayerGrid(prevGrid => aiAttackPlayer(prevGrid));
+        }, 100);
+    }
+};
+
 
     const handleDragStart = (e, length) => {
         e.dataTransfer.setData("length", length);
@@ -128,22 +132,24 @@ const Game = () => {
     }, []);
 
     const resetGame = () => {
-        if (gameOver) {
-            saveHighScore(timer); 
-        }
-        localStorage.removeItem("gameState"); 
+    if (gameOver) {
+        saveHighScore(timer); 
+    }
+    localStorage.removeItem("gameState"); 
 
-        setEnemyGrid(createEmptyGrid());
-        setPlayerGrid(createEmptyGrid());
-        setShips({ "5x1": 1, "4x1": 1, "3x1": 2, "2x1": 1 });
-        setGameStarted(false);
-        setGameOver(false);
-        setTimer(0);
+    setEnemyGrid(createEmptyGrid()); 
+    setPlayerGrid(createEmptyGrid()); 
+    setRevealedCells([]); 
+    setShips({ "5x1": 1, "4x1": 1, "3x1": 2, "2x1": 1 }); 
+    setGameStarted(false);
+    setGameOver(false);
+    setTimer(0);
 
-        setTimeout(() => {
-            initializeEnemyShips();
-        }, 100);
-    };
+    setTimeout(() => {
+        initializeEnemyShips(); 
+    }, 100);
+};
+
 
     const placeRandomShip = (grid, shipLength) => {
     const directions = ["horizontal", "vertical"];
@@ -193,8 +199,23 @@ const Game = () => {
                 </div>
 
                 <div className="game-board">
-                    <Board title="Enemy Board" grid={enemyGrid} onCellClick={handleEnemyClick} />
-                    <Board title="Player Board" grid={playerGrid} onDrop={handleDrop} onDragOver={e => e.preventDefault()} />
+                   
+<Board 
+    title="Enemy Board" 
+    grid={enemyGrid} 
+    onCellClick={handleEnemyClick} 
+    isEnemyBoard={true} 
+    revealedCells={revealedCells} 
+/>
+<Board 
+    title="Player Board" 
+    grid={playerGrid} 
+    onDrop={handleDrop} 
+    onDragOver={(e) => e.preventDefault()} 
+    isEnemyBoard={false} 
+/>
+
+
                 </div>
 
                 <div className="game-buttons">
