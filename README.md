@@ -1,6 +1,6 @@
-# Yang-Liu-project2/Yang-Liu-project2
+# Yang-Liu-project3
 
-Github repo : https://github.com/ElvaLiu2024/Yang-Liu-project2
+Github repo : https://github.com/ElvaLiu2024/Yang-Liu-project3
 
 A video Link : https://drive.google.com/file/d/1FNBxi8AOdHy1r14wVWfpx2YqgWoBLeXr/view?usp=sharing
 
