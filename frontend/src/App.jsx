@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AllGames from "./pages/AllGames";
+import ShipPlacement from "./pages/ShipPlacement";
 import { GameProvider } from "./context/GameContext";
 import { UserProvider } from "./context/UserContext";
 import "./styles/App.css";
@@ -22,12 +23,11 @@ function App() {
           <div className="content">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/game" element={<Game />} />
-              <Route path="/rules" element={<Rules />} />
-              <Route path="/scores" element={<HighScores />} />
               <Route path="/games" element={<AllGames />} />
               <Route path="/game/:gameId" element={<Game />} />
               <Route path="/game/:gameId/place" element={<ShipPlacement />} />
+              <Route path="/rules" element={<Rules />} />
+              <Route path="/scores" element={<HighScores />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Routes>

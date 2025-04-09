@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Board from "../components/Board";
@@ -12,6 +12,8 @@ const Game = () => {
   const { gameId } = useParams();
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const source = location.state?.from;
 
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +27,18 @@ const Game = () => {
       if (res.ok) {
         const data = await res.json();
         setGame(data);
+
+        // 🧠 Check source AFTER game is fetched
+        if (source === "new") {
+          console.log(
+            "User created a new game. Redirecting to ship placement."
+          );
+          navigate(`/game/${data._id}/place`);
+        } else if (source === "join") {
+          console.log("User joined an existing game.");
+        } else {
+          console.log("User refreshed or navigated here manually.");
+        }
       } else {
         setError("Game not found or access denied");
         navigate("/games");
@@ -37,9 +51,9 @@ const Game = () => {
   };
 
   useEffect(() => {
-    fetchGame(); // Initial fetch
+    fetchGame();
     const interval = setInterval(() => {
-      fetchGame(); // Poll every 3 seconds
+      fetchGame();
     }, 3000);
     return () => clearInterval(interval);
   }, [gameId]);

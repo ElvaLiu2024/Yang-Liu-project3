@@ -16,7 +16,7 @@ function checkWin(grid) {
 // Create a new game
 router.post("/new", async (req, res) => {
   const { username } = req.body;
-  console.log("Creating a new game for user:", username);
+  console.log("Creating a new game for user:", username, req.body);
   try {
     const game = new Game({
       players: [{ username }],
@@ -44,6 +44,7 @@ router.post("/new", async (req, res) => {
 // Join a game
 router.post("/:id/join", async (req, res) => {
   const { username } = req.body;
+  console.log(`User ${username} attempting to join game ${req.params.id}`);
   try {
     const game = await Game.findById(req.params.id);
     if (!game || game.players.length >= 2) {
@@ -52,8 +53,10 @@ router.post("/:id/join", async (req, res) => {
     game.players.push({ username });
     game.status = "active"; // Change game status to active
     await game.save();
+    console.log("User joined game:", game);
     res.json(game); // Return the updated game
   } catch (err) {
+    console.error("Error joining game:", err);
     res.status(500).json({ message: "Failed to join game." });
   }
 });
@@ -86,13 +89,20 @@ router.post("/:id/place", async (req, res) => {
 
 // Get all games
 router.get("/", async (req, res) => {
-  try {
-    const games = await Game.find().sort({ createdAt: -1 });
-    res.json(games); // Return all games sorted by creation time
-  } catch (err) {
-    console.error("Game.js - Error fetching games:", err);
-    res.status(500).json({ message: "Failed to fetch games." });
-  }
+  console.log("🟢 Received request to /api/games");
+    try {
+      const games = await Game.find().sort({ createdAt: -1 });
+      console.log("Games fetched:", games);
+      games.forEach((g, idx) => {
+        if (!Array.isArray(g.players)) {
+          console.warn(`⚠️ Game ${idx} has invalid players:`, g.players);
+        }
+      });
+      res.json(games); // Return all games sorted by creation time
+    } catch (err) {
+      console.error("Game.js - Error fetching games:", err);
+      res.status(500).json({ message: "Failed to fetch games." });
+    }
 });
 
 // Get specific game
@@ -109,9 +119,11 @@ router.get("/:id", async (req, res) => {
 // Fire (make a move)
 router.post("/:id/fire", async (req, res) => {
   const { row, col } = req.body;
+  console.log(`User making a move at ${row}, ${col} on game ${req.params.id}`);
   try {
     const game = await Game.findById(req.params.id);
     if (!game || game.status !== "active") {
+      console.log("Invalid game state");
       return res.status(400).json({ message: "Invalid game state." });
     }
 
@@ -141,7 +153,7 @@ router.post("/:id/fire", async (req, res) => {
     await game.save();
     res.json(game); // Return the updated game
   } catch (err) {
-    console.error(err);
+    console.error("Error processing fire:", err);
     res.status(500).json({ message: "Failed to process fire." });
   }
 });

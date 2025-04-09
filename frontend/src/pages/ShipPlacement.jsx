@@ -1,5 +1,5 @@
-import React, { useState, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useContext, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import "../styles/ShipPlacement.css";
 
@@ -7,66 +7,55 @@ const ShipPlacement = () => {
   const { gameId } = useParams();
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
-  const [grid, setGrid] = useState(
-    Array(10)
-      .fill()
-      .map(() => Array(10).fill(null))
-  );
-  const [placedCount, setPlacedCount] = useState(0);
-  const maxShips = 5;
+  const location = useLocation();
+  const [game, setGame] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const toggleCell = (row, col) => {
-    const newGrid = grid.map((r) => r.slice());
-    if (newGrid[row][col] === "S") {
-      newGrid[row][col] = null;
-      setPlacedCount(placedCount - 1);
-    } else {
-      if (placedCount >= maxShips)
-        return alert(`You can place up to ${maxShips} ships.`);
-      newGrid[row][col] = "S";
-      setPlacedCount(placedCount + 1);
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      return;
     }
-    setGrid(newGrid);
+
+    const fetchGame = async () => {
+      try {
+        const res = await fetch(`/api/games/${gameId}`, {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setGame(data);
+        } else {
+          setError("Game not found or access denied");
+          navigate("/games");
+        }
+      } catch (err) {
+        setError("Failed to load game.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGame();
+  }, [gameId, user, navigate]);
+
+  const handleShipPlacement = (shipData) => {
+    console.log("Placing ship:", shipData);
+    navigate(`/game/${gameId}`);
   };
 
-  const handleSubmit = async () => {
-    const res = await fetch(`/api/games/${gameId}/place`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ username: user.username, grid }),
-    });
-    if (res.ok) {
-      navigate(`/game/${gameId}`);
-    } else {
-      alert("Failed to place ships.");
-    }
-  };
+  if (loading) return <p>Loading game...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div className="ship-placement-page">
-      <h2>
-        Place Your Ships ({placedCount}/{maxShips})
-      </h2>
-      <div className="grid">
-        {grid.map((row, rIdx) => (
-          <div className="row" key={rIdx}>
-            {row.map((cell, cIdx) => (
-              <div
-                key={cIdx}
-                className={`cell ${cell === "S" ? "ship" : ""}`}
-                onClick={() => toggleCell(rIdx, cIdx)}
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-      <button
-        className="place-button"
-        onClick={handleSubmit}
-        disabled={placedCount !== maxShips}
-      >
-        Ready
+    <div className="ship-placement-container">
+      <h2>Place Your Ships</h2>
+      {/* Add your ship placement logic here */}
+      <p>Player: {user.username}</p>
+
+      <button onClick={() => handleShipPlacement("SampleShipData")}>
+        Confirm Ship Placement
       </button>
     </div>
   );
