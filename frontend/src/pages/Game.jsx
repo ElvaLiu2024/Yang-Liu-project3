@@ -1,11 +1,12 @@
-import React, { useContext, useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Board from "../components/Board";
 import Timer from "../components/Timer";
 import GameOver from "../components/GameOver";
 import { UserContext } from "../context/UserContext";
+import { useLocation } from "react-router-dom";
 import "../styles/Game.css";
 
 const Game = () => {
@@ -19,6 +20,17 @@ const Game = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (source === "new") {
+      navigate(`/game/${gameId}/place`);
+      console.log("This user created a new game.");
+    } else if (source === "join") {
+      console.log("This user joined an existing game.");
+    } else {
+      console.log("User refreshed or came from outside.");
+    }
+  }, [source]);
+
   const fetchGame = async () => {
     try {
       const res = await fetch(`/api/games/${gameId}`, {
@@ -27,18 +39,6 @@ const Game = () => {
       if (res.ok) {
         const data = await res.json();
         setGame(data);
-
-        // 🧠 Check source AFTER game is fetched
-        if (source === "new") {
-          console.log(
-            "User created a new game. Redirecting to ship placement."
-          );
-          navigate(`/game/${data._id}/place`);
-        } else if (source === "join") {
-          console.log("User joined an existing game.");
-        } else {
-          console.log("User refreshed or navigated here manually.");
-        }
       } else {
         setError("Game not found or access denied");
         navigate("/games");
@@ -51,11 +51,34 @@ const Game = () => {
   };
 
   useEffect(() => {
-    fetchGame();
+    fetchGame(); // Initial fetch
     const interval = setInterval(() => {
-      fetchGame();
+      fetchGame(); // Poll every 3 seconds
     }, 3000);
     return () => clearInterval(interval);
+  }, [gameId]);
+
+  useEffect(() => {
+    const socket = new WebSocket(`ws://localhost:5000/game/${gameId}`);
+
+    socket.onopen = () => {
+      console.log("Connected to game WebSocket.");
+    };
+
+    socket.onmessage = (event) => {
+      const updatedGame = JSON.parse(event.data);
+      setGame(updatedGame); // 更新游戏状态
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket Error: ", error);
+    };
+
+    socket.onclose = () => {
+      console.log("Disconnected from WebSocket.");
+    };
+
+    return () => socket.close();
   }, [gameId]);
 
   if (loading) return <p>Loading game...</p>;
@@ -68,6 +91,9 @@ const Game = () => {
 
   const myGrid = isPlayer1 ? game.player1Grid : game.player2Grid;
   const enemyGrid = isPlayer1 ? game.player2Grid : game.player1Grid;
+
+  console.log("My Grid: ", myGrid);
+  console.log("Enemy Grid: ", enemyGrid);
 
   const handleAttack = async (row, col) => {
     if (!isParticipant || game.status !== "active") return;
@@ -103,23 +129,31 @@ const Game = () => {
         {game.winner && <GameOver winner={game.winner.username} />}
 
         <div className="game-board">
-          <div>
-            <Timer active={game.currentTurn === user.username} />
-            <Board
-              title="Enemy Board"
-              grid={enemyGrid}
-              onCellClick={(row, col) => handleAttack(row, col)}
-              isEnemyBoard={true}
-            />
-          </div>
-          <div>
-            <Board title="Your Board" grid={myGrid} isEnemyBoard={false} />
-          </div>
+          <Board
+            title="Enemy Board"
+            grid={enemyGrid}
+            onCellClick={handleAttack}
+            isEnemyBoard={true}
+            timeLeft={game.timeLeft}
+          />
+          <Board
+            title="Your Board"
+            grid={myGrid}
+            onCellClick={handleAttack}
+            isEnemyBoard={false}
+            timeLeft={game.timeLeft}
+          />
         </div>
 
-        <p>Status: {game.status}</p>
-        <p>Turn: {game.currentTurn}</p>
-        {game.winner && <p>Winner: {game.winner.username}</p>}
+        <div className="status">
+          <p>Status: {game.status}</p>
+        </div>
+        <div className="turn">
+          <p>Turn: {game.currentTurn}</p>
+        </div>
+        {game.currentTurn !== user.username && (
+          <p style={{ color: "red" }}>It's not your turn!</p>
+        )}
       </main>
       <Footer />
     </div>

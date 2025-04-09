@@ -7,7 +7,7 @@
     width: fit-content; 
     min-width: 320px;
     max-width: 400px;
-    
+}   
 
 
 .board h2 {
@@ -18,15 +18,18 @@
 
 
 .grid {
-    display: grid;
-    grid-template-columns: repeat(10, 30px);
-    grid-template-rows: repeat(10, 30px);
-    gap: 1px; 
-    border: 2px solid #333;
-    width: fit-content; 
-    margin: 20px;
-
+  display: grid;
+  grid-template-columns: repeat(10, 30px);
+  grid-template-rows: repeat(10, 30px);
+  gap: 1px;
+  margin: 10px;
 }
+
+.cell {
+  width: 30px;
+  height: 30px;
+  background-color: rgb(242, 3, 3);
+  border: 1px solid #ccc;
 }
 
 @media (max-width: 576px) {
