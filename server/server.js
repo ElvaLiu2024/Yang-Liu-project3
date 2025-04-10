@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 5001;
 
 app.use(
   cors({
-    origin: true,
+    origin: "http://localhost:4173",
     credentials: true,
   })
 );
@@ -40,3 +40,18 @@ mongoose
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
+
+const session = require("express-session");
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "defaultSecretKey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    },
+  })
+);

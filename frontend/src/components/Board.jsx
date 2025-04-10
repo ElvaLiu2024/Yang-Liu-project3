@@ -1,12 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Timer from "./Timer";
 
-const Board = ({ title, grid, onCellClick, isEnemyBoard, timeLeft }) => {
-  console.log("Rendering grid:", grid);
-
+const Board = ({
+  title,
+  grid,
+  onCellClick,
+  isOwnBoard,
+  timeLeft,
+  onTimeUp,
+}) => {
   if (!grid || grid.length === 0) {
     return <div>No grid data available</div>;
   }
+
+  const getCellClass = (cell, isOwnBoard) => {
+    if (cell === "X") return "cell hit";
+    if (cell === "O") return "cell miss";
+    if (cell === "S" && isOwnBoard) return "cell ship";
+    return "cell";
+  };
+
+  const getCellContent = (cell) => {
+    if (cell === "X") return "✅";
+    if (cell === "O") return "❌";
+    return "";
+  };
 
   return (
     <div className="board">
@@ -16,16 +34,22 @@ const Board = ({ title, grid, onCellClick, isEnemyBoard, timeLeft }) => {
           row.map((cell, colIndex) => (
             <div
               key={`${rowIndex}-${colIndex}`}
-              className="cell"
-              onClick={() => onCellClick(rowIndex, colIndex)}
-              style={{
-                backgroundColor: cell === 1 ? "blue" : "lightgray",
+              className={getCellClass(cell, isOwnBoard)}
+              onClick={() => {
+                if (cell === "X" || cell === "O") return;
+                onCellClick(rowIndex, colIndex);
               }}
-            ></div>
+            >
+              {getCellContent(cell)}
+            </div>
           ))
         )}
       </div>
-      <Timer initialTime={timeLeft} onTimeUp={() => alert("Time's up!")} />
+      {typeof timeLeft === "number" ? (
+        <Timer initialTime={timeLeft} onTimeUp={onTimeUp} />
+      ) : (
+        <p className="time-left">Time Left: --</p>
+      )}
     </div>
   );
 };

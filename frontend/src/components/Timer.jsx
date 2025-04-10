@@ -1,22 +1,39 @@
 import React, { useEffect, useState } from "react";
 
 const Timer = ({ initialTime, onTimeUp }) => {
-  const [timeLeft, setTimeLeft] = useState(initialTime);
+  const [timeLeft, setTimeLeft] = useState(
+    typeof initialTime === "number" ? initialTime : 0
+  );
 
   useEffect(() => {
-    if (timeLeft === 0) {
-      onTimeUp();
-      return;
+    // Reset timer if initialTime changes
+    if (typeof initialTime === "number") {
+      setTimeLeft(initialTime);
     }
+  }, [initialTime]);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
 
     const timerInterval = setInterval(() => {
-      setTimeLeft((prevTime) => prevTime - 1);
+      setTimeLeft((prevTime) => {
+        const newTime = prevTime - 1;
+        if (newTime <= 0) {
+          clearInterval(timerInterval);
+          onTimeUp && onTimeUp();
+        }
+        return newTime;
+      });
     }, 1000);
 
     return () => clearInterval(timerInterval);
   }, [timeLeft, onTimeUp]);
 
-  return <div className="time-left">Time Left: {timeLeft}s</div>;
+  return (
+    <div className="time-left" style={{ color: "red", fontWeight: "bold" }}>
+      Time Left: {timeLeft}s
+    </div>
+  );
 };
 
 export default Timer;

@@ -1,3 +1,4 @@
+// ✅ AllGames.jsx
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
@@ -60,7 +61,7 @@ const AllGames = () => {
     });
     if (res.ok) {
       const game = await res.json();
-      navigate(`/game/${game._id}`);
+      navigate(`/game/${game._id}`, { state: { from: "new" } });
     } else {
       alert("Failed to create game.");
     }
@@ -75,7 +76,7 @@ const AllGames = () => {
       body: JSON.stringify({ username: user.username }),
     });
     if (res.ok) {
-      navigate(`/game/${gameId}`);
+      navigate(`/game/${gameId}/place`, { state: { from: "join" } });
     } else {
       alert("Failed to join game.");
     }

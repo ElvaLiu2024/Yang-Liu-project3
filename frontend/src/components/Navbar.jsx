@@ -15,7 +15,7 @@ const Navbar = () => {
       credentials: "include",
     });
     setUser(null);
-    navigate("/");
+    navigate("/login");
   };
 
   const handleNewGame = async () => {
@@ -34,8 +34,9 @@ const Navbar = () => {
       });
 
       if (res.ok) {
+        console.log("Redirecting to game...");
         const game = await res.json();
-        navigate(`/game/${game._id}`);
+        navigate(`/game/${game._id}`, { state: { from: "new" } });
       } else {
         alert("Failed to create game.");
       }

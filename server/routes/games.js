@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Game = require("../models/Game");
 const User = require("../models/User");
+const authMiddleware = require("../middleware/auth");
 
 // Utility to check if all cells are hit
 function checkWin(grid) {
@@ -14,10 +15,18 @@ function checkWin(grid) {
 }
 
 // Create a new game
-router.post("/new", async (req, res) => {
-  const { username } = req.body;
+router.post("/new", authMiddleware, async (req, res) => {
+  const username = req.user.username;
   console.log("Creating a new game for user:", username, req.body);
+
   try {
+    // Check if player is trying to create a game against themselves
+    if (req.body.players && req.body.players.length === 1) {
+      return res
+        .status(400)
+        .json({ message: "You cannot play against yourself." });
+    }
+
     const game = new Game({
       players: [{ username }],
       status: "open",
@@ -30,6 +39,7 @@ router.post("/new", async (req, res) => {
         .map(() => Array(10).fill(null)), // 10x10 grid for player 2
       history: [],
     });
+
     await game.save();
     console.log("New game created:", game);
     res.status(201).json(game); // Return the newly created game
@@ -42,8 +52,8 @@ router.post("/new", async (req, res) => {
 });
 
 // Join a game
-router.post("/:id/join", async (req, res) => {
-  const { username } = req.body;
+router.post("/:id/join", authMiddleware, async (req, res) => {
+  const username = req.user.username;
   console.log(`User ${username} attempting to join game ${req.params.id}`);
   try {
     const game = await Game.findById(req.params.id);
@@ -62,8 +72,8 @@ router.post("/:id/join", async (req, res) => {
 });
 
 // Place ships
-router.post("/:id/place", async (req, res) => {
-  const { username, grid } = req.body; // grid should be a 10x10 array with ships marked as "S"
+router.post("/:id/place", authMiddleware, async (req, res) => {
+  const { username, grid } = req.body;
   try {
     const game = await Game.findById(req.params.id);
     if (!game) return res.status(404).json({ message: "Game not found." });
@@ -90,19 +100,19 @@ router.post("/:id/place", async (req, res) => {
 // Get all games
 router.get("/", async (req, res) => {
   console.log("🟢 Received request to /api/games");
-    try {
-      const games = await Game.find().sort({ createdAt: -1 });
-      console.log("Games fetched:", games);
-      games.forEach((g, idx) => {
-        if (!Array.isArray(g.players)) {
-          console.warn(`⚠️ Game ${idx} has invalid players:`, g.players);
-        }
-      });
-      res.json(games); // Return all games sorted by creation time
-    } catch (err) {
-      console.error("Game.js - Error fetching games:", err);
-      res.status(500).json({ message: "Failed to fetch games." });
-    }
+  try {
+    const games = await Game.find().sort({ createdAt: -1 });
+    console.log("Games fetched:", games);
+    games.forEach((g, idx) => {
+      if (!Array.isArray(g.players)) {
+        console.warn(`⚠️ Game ${idx} has invalid players:`, g.players);
+      }
+    });
+    res.json(games); // Return all games sorted by creation time
+  } catch (err) {
+    console.error("Game.js - Error fetching games:", err);
+    res.status(500).json({ message: "Failed to fetch games." });
+  }
 });
 
 // Get specific game
@@ -116,45 +126,98 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Fire (make a move)
-router.post("/:id/fire", async (req, res) => {
+router.post("/:id/fire", authMiddleware, async (req, res) => {
   const { row, col } = req.body;
-  console.log(`User making a move at ${row}, ${col} on game ${req.params.id}`);
+  const loggedInUser = req.user?.username;
+  console.log("Attack received:", { row, col });
+
+  if (!loggedInUser) {
+    return res.status(401).json({ error: "User not authenticated." });
+  }
+
   try {
     const game = await Game.findById(req.params.id);
     if (!game || game.status !== "active") {
-      console.log("Invalid game state");
       return res.status(400).json({ message: "Invalid game state." });
     }
 
-    const currentUser = game.currentTurn;
-    const opponent = game.players.find(
-      (p) => p.username !== currentUser
-    )?.username;
-    const targetGrid =
-      game.players[0].username === currentUser ? "player2Grid" : "player1Grid";
+    console.log("Current turn in backend:", game.currentTurn);
+    if (loggedInUser !== game.currentTurn) {
+      return res.status(400).json({ error: "Sorry , Not your turn!" });
+    }
 
-    if (game[targetGrid][row][col] !== null) {
+    // Process attack
+    const opponent = game.players.find((p) => p.username !== game.currentTurn);
+    if (!opponent) {
+      return res.status(400).json({ error: "Opponent not found." });
+    }
+
+    const targetGrid =
+      game.players[0].username === game.currentTurn
+        ? "player2Grid"
+        : "player1Grid";
+
+    const cell = game[targetGrid][row][col];
+    if (cell === "X" || cell === "O") {
       return res.status(400).json({ message: "Cell already targeted." });
     }
 
-    game[targetGrid][row][col] = "X"; // Mark as hit
-    game.history.push({ username: currentUser, x: row, y: col });
-
-    const opponentGrid =
-      targetGrid === "player1Grid" ? game.player1Grid : game.player2Grid;
-    if (checkWin(opponentGrid)) {
-      game.status = "completed";
-      game.winner = { username: currentUser };
+    if (cell === "S") {
+      game[targetGrid][row][col] = "X"; // hit
     } else {
-      game.currentTurn = opponent;
+      game[targetGrid][row][col] = "O"; // miss
     }
 
+    game.history.push({ username: loggedInUser, x: row, y: col });
+
+    if (checkWin(game[targetGrid])) {
+      game.status = "completed";
+      game.winner = { username: loggedInUser };
+    }
+
+    // Switch turns
+    game.currentTurn = opponent.username;
+    console.log("Updated turn in backend:", game.currentTurn);
+
     await game.save();
-    res.json(game); // Return the updated game
+    res.json(game); // Send the updated game state back to the frontend
   } catch (err) {
     console.error("Error processing fire:", err);
     res.status(500).json({ message: "Failed to process fire." });
+  }
+});
+
+// Skip turn
+router.post("/:id/skip", async (req, res) => {
+  try {
+    const game = await Game.findById(req.params.id);
+    if (!game || game.status !== "active") {
+      return res.status(400).json({ message: "Invalid game state." });
+    }
+
+    const currentPlayer = game.currentTurn;
+    const opponent = game.players.find(
+      (p) => p.username !== currentPlayer
+    )?.username;
+
+    if (!opponent) {
+      return res.status(400).json({ message: "Opponent not found." });
+    }
+
+    // Push a history entry that it was skipped
+    game.history.push({
+      username: currentPlayer,
+      skipped: true,
+      timestamp: new Date(),
+    });
+
+    game.currentTurn = opponent.username;
+
+    await game.save();
+    res.json({ message: "Turn skipped.", game });
+  } catch (err) {
+    console.error("Skip turn error:", err);
+    res.status(500).json({ message: "Failed to skip turn." });
   }
 });
 

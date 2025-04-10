@@ -1,41 +1,64 @@
 .board {
-    background: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: fit-content; 
-    min-width: 320px;
-    max-width: 400px;
-}   
-
-
-.board h2 {
-    font-size: 1.3rem;
-    font-weight: bold;
-    margin-bottom: 20px;
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: fit-content;
+  min-width: 320px;
+  max-width: 400px;
 }
 
+.board h2 {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
 
 .grid {
   display: grid;
   grid-template-columns: repeat(10, 30px);
   grid-template-rows: repeat(10, 30px);
-  gap: 1px;
-  margin: 10px;
+  gap: 2px;
+  justify-content: center;
+  margin: 0 auto;
 }
 
 .cell {
   width: 30px;
   height: 30px;
-  background-color: rgb(242, 3, 3);
-  border: 1px solid #ccc;
+  background-color: lightgray;
+  border: 1px solid #999;
+  cursor: pointer;
+   display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.cell.ship {
+  background-color: blue;
+}
+
+.cell.hit {
+  background-color: green;
+}
+
+.cell.miss {
+  background-color: red;
+}
+
+.time-left {
+  margin-top: 8px;
+  font-weight: bold;
+  color: red;
 }
 
 @media (max-width: 576px) {
-    .grid {
-        grid-template-columns: repeat(10, 30px);
-        grid-template-rows: repeat(10, 30px);
-        gap: 1px;
-    }
+  .grid {
+    grid-template-columns: repeat(10, 30px);
+    grid-template-rows: repeat(10, 30px);
+    gap: 1px;
+  }
 }
