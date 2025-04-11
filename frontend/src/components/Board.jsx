@@ -45,13 +45,13 @@ const Board = ({
           ))
         )}
       </div>
-      {typeof timeLeft === "number" ? (
-        <Timer initialTime={timeLeft} onTimeUp={onTimeUp} />
+
+      {/* {typeof timeLeft === "number" && timeLeft !== null ? (
+        <p className="time-left">Time Left: {timeLeft}s</p>
       ) : (
         <p className="time-left">Time Left: --</p>
-      )}
+      )} */}
     </div>
   );
 };
-
 export default Board;

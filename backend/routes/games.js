@@ -8,12 +8,11 @@ const authMiddleware = require("../middleware/auth");
 function checkWin(grid) {
   for (let row of grid) {
     for (let cell of row) {
-      if (cell !== null && cell !== "X") return false; // If a cell is not marked as hit, the game isn't won
+      if (cell !== "X") return false; // If a cell is not marked as hit, the game isn't won
     }
   }
   return true; // All cells hit, win
 }
-
 // Create a new game
 router.post("/new", authMiddleware, async (req, res) => {
   const username = req.user.username;
@@ -38,6 +37,7 @@ router.post("/new", authMiddleware, async (req, res) => {
         .fill()
         .map(() => Array(10).fill(null)), // 10x10 grid for player 2
       history: [],
+      timeLeft: 60,
     });
 
     await game.save();
@@ -119,10 +119,43 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const game = await Game.findById(req.params.id);
+    console.log("Fetched game data:", game);
     if (!game) return res.status(404).json({ message: "Game not found" });
     res.json(game); // Return the specific game by ID
   } catch (err) {
     res.status(500).json({ message: "Failed to get game." });
+  }
+});
+
+// Update the time left every second
+router.post("/:id/start", async (req, res) => {
+  const gameId = req.params.id;
+  const game = await Game.findById(gameId);
+
+  if (game && game.status === "active") {
+    // Initialize the timer to 60 seconds if not already set
+    if (game.timeLeft === undefined || game.timeLeft === 0) {
+      game.timeLeft = 60;
+    }
+
+    await game.save();
+    console.log("Game started. Initial timeLeft: 60");
+
+    const timerInterval = setInterval(async () => {
+      const game = await Game.findById(gameId);
+      console.log(`Before decrement: timeLeft = ${game.timeLeft}`);
+
+      if (game && game.status === "active" && game.timeLeft > 0) {
+        game.timeLeft -= 1;
+        await game.save(); // Save the updated game state to the database
+        console.log("Updated timeLeft in backend:", game.timeLeft);
+      } else {
+        clearInterval(timerInterval); // Stop the interval when timeLeft reaches 0
+        console.log("Timer stopped at 0.");
+      }
+    }, 1000);
+  } else {
+    res.status(400).json({ message: "Game is not active." });
   }
 });
 
@@ -172,7 +205,10 @@ router.post("/:id/fire", authMiddleware, async (req, res) => {
 
     if (checkWin(game[targetGrid])) {
       game.status = "completed";
-      game.winner = { username: loggedInUser };
+
+      game.winner = loggedInUser; // Store only the username as a string
+      console.log("Game completed, winner:", loggedInUser);
+      await game.save();
     }
 
     // Switch turns
@@ -186,6 +222,7 @@ router.post("/:id/fire", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Failed to process fire." });
   }
 });
+
 
 // Skip turn
 router.post("/:id/skip", async (req, res) => {

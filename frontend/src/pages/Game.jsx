@@ -18,11 +18,92 @@ const Game = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Fetch game data and set up interval to keep fetching game status
   useEffect(() => {
     fetchGame();
-    const interval = setInterval(fetchGame, 3000);
+    const interval = setInterval(() => {
+      if (game?.status === "completed") {
+        clearInterval(interval);
+      } else {
+        fetchGame();
+      }
+    }, 1000);
     return () => clearInterval(interval);
-  }, [gameId]);
+  }, [gameId, game?.status]);
+  // Set initial timeLeft to 60 if not defined
+  useEffect(() => {
+    if (game?.status === "active" && game.timeLeft === undefined) {
+      setGame((prevGame) => ({
+        ...prevGame,
+        timeLeft: 60, // Set initial timeLeft to 60 if not defined
+      }));
+    }
+  }, [game]);
+
+  // Start the game timer when the game is active and the user's turn begins
+  useEffect(() => {
+    if (game?.status === "active" && game.currentTurn === user.username) {
+      const startGameTimer = async () => {
+        const res = await fetch(`/api/games/${gameId}/start`, {
+          method: "POST",
+          credentials: "include",
+        });
+        if (res.ok) {
+          console.log("Game timer started");
+        }
+      };
+
+      // Only call start game when the game is first started and the timer hasn't been started yet
+      if (game?.timeLeft === undefined || game?.timeLeft === 0) {
+        startGameTimer();
+      }
+
+      const timerInterval = setInterval(async () => {
+        const res = await fetch(`/api/games/${gameId}`, {
+          credentials: "include",
+        });
+        const updatedGame = await res.json();
+
+        console.log("Fetched game data:", updatedGame);
+
+        // Check if timeLeft is updated
+        if (updatedGame.timeLeft !== game.timeLeft) {
+          console.log("Rendering timeLeft:", updatedGame.timeLeft);
+          setGame((prevGame) => ({
+            ...prevGame,
+            timeLeft: updatedGame.timeLeft,
+          }));
+        }
+
+        if (updatedGame.timeLeft <= 0) {
+          clearInterval(timerInterval);
+          console.log("Timer reached 0, interval stopped.");
+        }
+      }, 1000);
+
+      return () => clearInterval(timerInterval); // Cleanup the interval when the component unmounts or game ends
+    }
+  }, [game, gameId, user.username]);
+  useEffect(() => {
+    const fetchGame = async () => {
+      const res = await fetch(`/api/games/${gameId}`, {
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Fetched game data:", data);
+        if (data.timeLeft !== game.timeLeft) {
+          setGame((prevGame) => ({
+            ...prevGame,
+            timeLeft: data.timeLeft, // Update timeLeft correctly
+          }));
+        }
+      }
+    };
+
+    fetchGame();
+  }, [gameId, game?.timeLeft]);
 
   const fetchGame = async () => {
     try {
@@ -33,8 +114,9 @@ const Game = () => {
         const data = await res.json();
         console.log("Fetched game data:", data);
         setGame(data);
-        if (data.status === "completed") {
-          console.log("Winner:", data.winner); // Log winner here
+        // If the game is open and we are coming from "new" game page, navigate to place ships page
+        if (data.status === "open" && source === "new") {
+          navigate(`/game/${gameId}/place`);
         }
       } else {
         setError("Game not found or access denied");
@@ -48,18 +130,7 @@ const Game = () => {
     }
   };
 
-  useEffect(() => {
-    fetchGame();
-    const interval = setInterval(() => {
-      if (game.status === "completed") {
-        clearInterval(interval);
-      } else {
-        fetchGame();
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [gameId, game.status]);
-
+  // This useEffect ensures that when the user is logged in and we come from "new" game page, we navigate correctly
   useEffect(() => {
     if (!user) {
       console.log("User refreshed or came from outside.");
@@ -72,8 +143,9 @@ const Game = () => {
     } else if (!source) {
       console.log("User refreshed or came from outside.");
     }
-  }, [source, gameId, navigate, game]);
+  }, [source, gameId, navigate, user]);
 
+  // Handle the timeout when the time for the current turn is up
   const handleTimeUp = async () => {
     if (!game || !user || user.username !== game.currentTurn) return;
     try {
@@ -92,6 +164,7 @@ const Game = () => {
     }
   };
 
+  // Handle the attack logic
   const handleAttack = async (row, col) => {
     console.log("Attack coordinates:", row, col);
 
@@ -139,15 +212,12 @@ const Game = () => {
     }
   };
 
-  // Handle Game Over and Redirect Losing Player
+  // Handle game over logic
   const handleGameOver = () => {
-    if (game.status === "completed") {
-      // Identify the losing player
-      clearInterval(interval);
+    if (game?.status === "completed") {
       const losingPlayer =
         user.username === game.winner ? game.currentTurn : user.username;
 
-      // Show the "Game Over" and "XX Wins!" message, then redirect after a delay
       setTimeout(() => {
         console.log("Redirecting to All Games...");
         navigate("/games");
@@ -158,30 +228,28 @@ const Game = () => {
   if (!user) return <p>Please log in to play.</p>;
   if (loading) return <p>Loading game...</p>;
   if (error) return <p>{error}</p>;
-  if (!game || !Array.isArray(game.players)) return <p>Loading game data...</p>;
 
-  const player1 = game.players[0];
-  const player2 = game.players[1];
+  const player1 = game?.players[0];
+  const player2 = game?.players[1];
 
   const isPlayer1 = player1?.username === user.username;
   const isPlayer2 = player2?.username === user.username;
-  const isParticipant = isPlayer1 || isPlayer2;
 
-  const myGrid = isPlayer1 ? game.player1Grid : game.player2Grid;
-  const enemyGrid = isPlayer1 ? game.player2Grid : game.player1Grid;
+  const myGrid = isPlayer1 ? game?.player1Grid : game?.player2Grid;
+  const enemyGrid = isPlayer1 ? game?.player2Grid : game?.player1Grid;
 
   const shouldShowTimer =
-    game.status === "active" && user.username === game.currentTurn;
+    game?.status === "active" && user.username === game.currentTurn;
 
+  console.log("Rendering timeLeft:", game?.timeLeft);
   return (
     <div className="game-container">
       <Navbar />
       <main className="game-content">
         <h1>Game #{gameId.slice(-5)}</h1>
-        {game.status === "completed" && (
+        {game?.status === "completed" && (
           <div>
-            {console.log("Game is completed, winner:", game.winner)}
-            <GameOver winner={game.winner} />{" "}
+            <GameOver winner={game?.winner} />
           </div>
         )}
         <div className="game-board">
@@ -190,7 +258,7 @@ const Game = () => {
             grid={enemyGrid}
             onCellClick={handleAttack}
             isOwnBoard={false}
-            timeLeft={shouldShowTimer ? game.timeLeft : null}
+            timeLeft={shouldShowTimer ? game?.timeLeft : null}
             onTimeUp={handleTimeUp}
           />
           <Board
@@ -201,12 +269,15 @@ const Game = () => {
             timeLeft={null}
           />
         </div>
-        <p>Status: {game.status}</p>
-        <p>Turn: {game.currentTurn}</p>
+        <p>Status: {game?.status}</p>
+        <p>Turn: {game?.currentTurn}</p>
+        {shouldShowTimer && (
+          <p className="time-left">Time Left: {game?.timeLeft}s</p>
+        )}
       </main>
       <Footer />
     </div>
   );
-};
+}
 
 export default Game;

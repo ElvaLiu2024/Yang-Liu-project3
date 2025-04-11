@@ -16,6 +16,7 @@ const gameSchema = new mongoose.Schema({
   player2Grid: { type: [[String]], required: true }, // A 10x10 grid for player 2
   history: { type: [Object], default: [] }, // Stores move history
   winner: { type: String, default: null }, // The winner of the game
+  timeLeft: { type: Number, default: 60 }, // Added timeLeft field with default value of 60 seconds
 });
 
 const Game = mongoose.model("Game", gameSchema);
