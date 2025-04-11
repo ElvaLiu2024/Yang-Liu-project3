@@ -33,6 +33,9 @@ const Game = () => {
         const data = await res.json();
         console.log("Fetched game data:", data);
         setGame(data);
+        if (data.status === "completed") {
+          console.log("Winner:", data.winner); // Log winner here
+        }
       } else {
         setError("Game not found or access denied");
         navigate("/games");
@@ -47,9 +50,15 @@ const Game = () => {
 
   useEffect(() => {
     fetchGame();
-    const interval = setInterval(fetchGame, 3000);
+    const interval = setInterval(() => {
+      if (game.status === "completed") {
+        clearInterval(interval);
+      } else {
+        fetchGame();
+      }
+    }, 3000);
     return () => clearInterval(interval);
-  }, [gameId]);
+  }, [gameId, game.status]);
 
   useEffect(() => {
     if (!user) {
@@ -64,28 +73,6 @@ const Game = () => {
       console.log("User refreshed or came from outside.");
     }
   }, [source, gameId, navigate, game]);
-
-  useEffect(() => {
-    if (!user || !game) return;
-    const player1 = game.players?.[0];
-    const player2 = game.players?.[1];
-
-    const isPlayer1 = player1?.username === user.username;
-    const isPlayer2 = player2?.username === user.username;
-
-    const player1Placed =
-      Array.isArray(game?.player1Grid?.flat()) &&
-      game.player1Grid.flat().includes("S");
-    const player2Placed =
-      Array.isArray(game?.player2Grid?.flat()) &&
-      game.player2Grid.flat().includes("S");
-    const needPlacement =
-      (isPlayer1 && !player1Placed) || (isPlayer2 && !player2Placed);
-
-    if (needPlacement) {
-      navigate(`/game/${gameId}/place`);
-    }
-  }, [user, game, gameId, navigate]);
 
   const handleTimeUp = async () => {
     if (!game || !user || user.username !== game.currentTurn) return;
@@ -104,24 +91,6 @@ const Game = () => {
       console.error("Error skipping turn:", err);
     }
   };
-
-  if (!user) return <p>Please log in to play.</p>;
-  if (loading) return <p>Loading game...</p>;
-  if (error) return <p>{error}</p>;
-  if (!game || !Array.isArray(game.players)) return <p>Loading game data...</p>;
-
-  const player1 = game.players[0];
-  const player2 = game.players[1];
-
-  const isPlayer1 = player1?.username === user.username;
-  const isPlayer2 = player2?.username === user.username;
-  const isParticipant = isPlayer1 || isPlayer2;
-
-  const myGrid = isPlayer1 ? game.player1Grid : game.player2Grid;
-  const enemyGrid = isPlayer1 ? game.player2Grid : game.player1Grid;
-
-  const shouldShowTimer =
-    game.status === "active" && user.username === game.currentTurn;
 
   const handleAttack = async (row, col) => {
     console.log("Attack coordinates:", row, col);
@@ -157,6 +126,11 @@ const Game = () => {
       if (attackRes.ok) {
         console.log("Game updated:", response);
         setGame(response); // Update the game state from the backend
+
+        // Check if the game is over after the attack
+        if (response.status === "completed") {
+          handleGameOver(); // Call the game over function
+        }
       } else {
         alert(response.error || "Invalid move or not your turn");
       }
@@ -165,35 +139,74 @@ const Game = () => {
     }
   };
 
-return (
-  <div className="game-container">
-    <Navbar />
-    <main className="game-content">
-      <h1>Game #{gameId.slice(-5)}</h1>
-      {game.winner && <GameOver winner={game.winner.username} />}
-      <div className="game-board">
-        <Board
-          title="Enemy Board"
-          grid={enemyGrid}
-          onCellClick={handleAttack}
-          isOwnBoard={false}
-          timeLeft={shouldShowTimer ? game.timeLeft : null}
-          onTimeUp={handleTimeUp}
-        />
-        <Board
-          title="Your Board"
-          grid={myGrid}
-          onCellClick={() => {}}
-          isOwnBoard={true}
-          timeLeft={null}
-        />
-      </div>
-      <p>Status: {game.status}</p>
-      <p>Turn: {game.currentTurn}</p>
-    </main>
-    <Footer />
-  </div>
-);
+  // Handle Game Over and Redirect Losing Player
+  const handleGameOver = () => {
+    if (game.status === "completed") {
+      // Identify the losing player
+      clearInterval(interval);
+      const losingPlayer =
+        user.username === game.winner ? game.currentTurn : user.username;
+
+      // Show the "Game Over" and "XX Wins!" message, then redirect after a delay
+      setTimeout(() => {
+        console.log("Redirecting to All Games...");
+        navigate("/games");
+      }, 3000); // 3 seconds delay
+    }
+  };
+
+  if (!user) return <p>Please log in to play.</p>;
+  if (loading) return <p>Loading game...</p>;
+  if (error) return <p>{error}</p>;
+  if (!game || !Array.isArray(game.players)) return <p>Loading game data...</p>;
+
+  const player1 = game.players[0];
+  const player2 = game.players[1];
+
+  const isPlayer1 = player1?.username === user.username;
+  const isPlayer2 = player2?.username === user.username;
+  const isParticipant = isPlayer1 || isPlayer2;
+
+  const myGrid = isPlayer1 ? game.player1Grid : game.player2Grid;
+  const enemyGrid = isPlayer1 ? game.player2Grid : game.player1Grid;
+
+  const shouldShowTimer =
+    game.status === "active" && user.username === game.currentTurn;
+
+  return (
+    <div className="game-container">
+      <Navbar />
+      <main className="game-content">
+        <h1>Game #{gameId.slice(-5)}</h1>
+        {game.status === "completed" && (
+          <div>
+            {console.log("Game is completed, winner:", game.winner)}
+            <GameOver winner={game.winner} />{" "}
+          </div>
+        )}
+        <div className="game-board">
+          <Board
+            title="Enemy Board"
+            grid={enemyGrid}
+            onCellClick={handleAttack}
+            isOwnBoard={false}
+            timeLeft={shouldShowTimer ? game.timeLeft : null}
+            onTimeUp={handleTimeUp}
+          />
+          <Board
+            title="Your Board"
+            grid={myGrid}
+            onCellClick={() => {}}
+            isOwnBoard={true}
+            timeLeft={null}
+          />
+        </div>
+        <p>Status: {game.status}</p>
+        <p>Turn: {game.currentTurn}</p>
+      </main>
+      <Footer />
+    </div>
+  );
 };
 
 export default Game;
