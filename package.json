@@ -17,5 +17,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.2",
     "path-to-regexp": "^6.3.0"
+  },
+  "devDependencies": {
+    "vite": "^6.2.6"
   }
 }

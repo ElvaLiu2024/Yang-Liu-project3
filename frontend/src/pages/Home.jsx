@@ -19,11 +19,11 @@ const Home = () => {
     };
 
     return (
-        <div className="main-container">
-            <main className="main-content">
-                <h1>Welcome to Battleship</h1>
-                <p>Prepare your fleet and sink your opponent's ships!</p>
-                <div className="buttons">
+      <div className="main-container">
+        <main className="main-content">
+          <h1>Welcome to Battleship</h1>
+          <p>Prepare your fleet and sink your opponent's ships!</p>
+          {/* <div className="buttons">
                     <button 
                         className="start-button" 
                         onClick={handleNormalModeClick}>
@@ -35,9 +35,9 @@ const Home = () => {
                         onClick={handleEasyModeClick}>
                         Play Free Mode
                     </button>
-                </div>
-            </main>
-        </div>
+                </div> */}
+        </main>
+      </div>
     );
 };
 
