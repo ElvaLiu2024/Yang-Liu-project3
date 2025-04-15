@@ -3,9 +3,9 @@
 Github repo : https://github.com/ElvaLiu2024/Yang-Liu-project3
 
 A video Link : 
-Render Link : 
 
-Writeup: 
+Render Link : https://yang-liu-project3.onrender.com
+
 Write-Up
 1. Challenges Faced While Making This App:
 Game Logic Handling: One of the biggest challenges I faced while building this app was ensuring the game logic works correctly, especially handling the state transitions between players. Implementing the attack, turn switching, and win conditions involved careful state management, including handling timeouts and player actions.
