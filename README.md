@@ -2,7 +2,7 @@
 
 Github repo : https://github.com/ElvaLiu2024/Yang-Liu-project3
 
-A video Link : 
+A video Link : https://drive.google.com/file/d/13To13jlCUqK6kIKBvGHu8Dy8-rF8MOvu/view?usp=sharing
 
 Render Link : https://yang-liu-project3.onrender.com
 
