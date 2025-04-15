@@ -19,8 +19,6 @@ Leaderboard Sorting: Sorting the leaderboard based on multiple criteria (wins, l
 2. Additional Features and Functional/Design Changes I Would Make Given More Time:
 Drag-and-Drop Ship Placement (Bonus Feature): I would implement the drag-and-drop feature for ship placement, allowing users to move ships around their board for better interaction. This would require careful handling of grid placement logic and ensuring ships do not overlap.
 
-AI Opponents (Bonus Feature): I would add AI functionality so users could play against a bot when no other player is available. The AI could be built to mimic simple game logic, offering players a challenging opponent when they don't have a partner.
-
 More Detailed Game Over Screens: I would make the game-over screens more visually engaging by adding animations or graphics to celebrate the winner. This could include a scoreboard animation or something more interactive.
 
 Mobile Responsiveness: Although the current design is functional, I would refine the app to ensure a smoother mobile experience by adjusting some components and ensuring the app is fully responsive across various screen sizes.
