@@ -3,9 +3,9 @@
 Github repo : https://github.com/ElvaLiu2024/Yang-Liu-project3
 
 A video Link : 
-Render Link : 
 
-Writeup: 
+Render Link : https://yang-liu-project3.onrender.com
+
 Write-Up
 1. Challenges Faced While Making This App:
 Game Logic Handling: One of the biggest challenges I faced while building this app was ensuring the game logic works correctly, especially handling the state transitions between players. Implementing the attack, turn switching, and win conditions involved careful state management, including handling timeouts and player actions.
@@ -44,6 +44,11 @@ Frontend development (UI, game board, interaction logic): ~20 hours
 Testing and debugging: ~10 hours
 
 User authentication setup: ~5 hours
+
+Bonus part: 
+Password Encryption: Ensured that user passwords are encrypted in the database to add an extra level of security.
+
+Click and Drag Setup: Implemented click-and-drag ship placement functionality, where users can drag ships onto the board to decide their placement before the game starts.
 
 
 
