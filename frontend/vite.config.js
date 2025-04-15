@@ -15,5 +15,9 @@ export default defineConfig({
     },
     historyApiFallback: true,
   },
+  build: {
+    rollupOptions: {
+      external: ["@vitejs/plugin-react", "react/jsx-runtime"], // Externalize jsx-runtime
+    },
+  },
 });
-
