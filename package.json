@@ -19,6 +19,7 @@
     "path-to-regexp": "^6.3.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.2.6"
   }
 }
