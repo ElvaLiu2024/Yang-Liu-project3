@@ -30,7 +30,7 @@ const HighScores = () => {
 
   return (
     <div className="scores-page">
-      <h2>Leaderboard</h2>
+      <h2>Score board</h2>
       {loading ? (
         <p>Loading scores...</p>
       ) : (

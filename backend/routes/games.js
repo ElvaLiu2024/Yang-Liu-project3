@@ -210,10 +210,83 @@ router.post("/:id/fire", authMiddleware, async (req, res) => {
     game.history.push({ username: loggedInUser, x: row, y: col });
 
     if (checkWin(game[targetGrid])) {
-      console.log("Game won! Updating status.");
+      console.log("======== Game Won! Updating Status ========");
       game.status = "completed";
-
       game.winner = loggedInUser; // Store only the username as a string
+
+      const loserUsername = opponent.username;
+
+      console.log(`Winner: ${loggedInUser}, Loser: ${loserUsername}`);
+
+      // Check users before updating
+      console.log("Querying current user status...");
+      const winnerBefore = await User.findOne({ username: loggedInUser });
+      const loserBefore = await User.findOne({ username: loserUsername });
+
+      console.log(
+        "Winner before update:",
+        winnerBefore
+          ? `${winnerBefore.username}, Wins: ${winnerBefore.wins}, Losses: ${winnerBefore.losses}`
+          : "User not found"
+      );
+      console.log(
+        "Loser before update:",
+        loserBefore
+          ? `${loserBefore.username}, Wins: ${loserBefore.wins}, Losses: ${loserBefore.losses}`
+          : "User not found"
+      );
+
+      try {
+        // Using method 1: updateOne
+        console.log("Attempting to update user records...");
+        const winnerResult = await User.updateOne(
+          { username: loggedInUser },
+          { $inc: { wins: 1 } }
+        );
+
+        console.log("Winner update result:", winnerResult);
+
+        const loserResult = await User.updateOne(
+          { username: loserUsername },
+          { $inc: { losses: 1 } }
+        );
+
+        console.log("Loser update result:", loserResult);
+
+        // Check if updates were successful
+        if (winnerResult.modifiedCount === 0) {
+          console.warn(`Warning: Winner ${loggedInUser} record not updated`);
+        }
+
+        if (loserResult.modifiedCount === 0) {
+          console.warn(`Warning: Loser ${loserUsername} record not updated`);
+        }
+
+        // Query users again to confirm updates
+        const winnerAfter = await User.findOne({ username: loggedInUser });
+        const loserAfter = await User.findOne({ username: loserUsername });
+
+        console.log(
+          "Winner after update:",
+          winnerAfter
+            ? `${winnerAfter.username}, Wins: ${winnerAfter.wins}, Losses: ${winnerAfter.losses}`
+            : "User not found"
+        );
+        console.log(
+          "Loser after update:",
+          loserAfter
+            ? `${loserAfter.username}, Wins: ${loserAfter.wins}, Losses: ${loserAfter.losses}`
+            : "User not found"
+        );
+
+        console.log(
+          `Successfully updated records: ${loggedInUser} won, ${loserUsername} lost`
+        );
+      } catch (err) {
+        console.error("Error updating user records:", err);
+        console.error("Error details:", err.message);
+        console.error("Error stack:", err.stack);
+      }
 
       await game.save();
       console.log("Game completed, winner:", loggedInUser);
@@ -230,7 +303,6 @@ router.post("/:id/fire", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Failed to process fire." });
   }
 });
-
 
 // Skip turn
 router.post("/:id/skip", async (req, res) => {
