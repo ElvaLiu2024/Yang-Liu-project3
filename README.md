@@ -45,5 +45,10 @@ Testing and debugging: ~10 hours
 
 User authentication setup: ~5 hours
 
+Bonus part: 
+Password Encryption: Ensured that user passwords are encrypted in the database to add an extra level of security.
+
+Click and Drag Setup: Implemented click-and-drag ship placement functionality, where users can drag ships onto the board to decide their placement before the game starts.
+
 
 
