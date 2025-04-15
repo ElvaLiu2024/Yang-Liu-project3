@@ -1,14 +1,6 @@
 import React from "react";
-import Timer from "./Timer";
 
-const Board = ({
-  title,
-  grid,
-  onCellClick,
-  isOwnBoard,
-  timeLeft,
-  onTimeUp,
-}) => {
+const Board = ({ title, grid, onCellClick, isOwnBoard }) => {
   if (!grid || grid.length === 0) {
     return <div>No grid data available</div>;
   }
@@ -45,12 +37,6 @@ const Board = ({
           ))
         )}
       </div>
-
-      {/* {typeof timeLeft === "number" && timeLeft !== null ? (
-        <p className="time-left">Time Left: {timeLeft}s</p>
-      ) : (
-        <p className="time-left">Time Left: --</p>
-      )} */}
     </div>
   );
 };

@@ -8,7 +8,7 @@ const authMiddleware = require("../middleware/auth");
 function checkWin(grid) {
   for (let row of grid) {
     for (let cell of row) {
-      if (cell !== "X") return false; // If a cell is not marked as hit, the game isn't won
+      if (cell === "S") return false; // If a cell is not marked as hit, the game isn't won
     }
   }
   return true; // All cells hit, win
@@ -76,7 +76,10 @@ router.post("/:id/place", authMiddleware, async (req, res) => {
   const { username, grid } = req.body;
   try {
     const game = await Game.findById(req.params.id);
-    if (!game) return res.status(404).json({ message: "Game not found." });
+    if (!game) {
+      console.log("No game found with the given ID.");
+      return res.status(404).json({ message: "Game not found." });
+    }
 
     const isPlayer1 = game.players[0]?.username === username;
     const isPlayer2 = game.players[1]?.username === username;
@@ -150,7 +153,9 @@ router.post("/:id/start", async (req, res) => {
         await game.save(); // Save the updated game state to the database
         console.log("Updated timeLeft in backend:", game.timeLeft);
       } else {
-        clearInterval(timerInterval); // Stop the interval when timeLeft reaches 0
+        game.status = "completed"; // End the game if the time reaches 0
+        await game.save();
+        clearInterval(timerInterval); // Stop the timer when time reaches 0
         console.log("Timer stopped at 0.");
       }
     }, 1000);
@@ -171,6 +176,7 @@ router.post("/:id/fire", authMiddleware, async (req, res) => {
   try {
     const game = await Game.findById(req.params.id);
     if (!game || game.status !== "active") {
+      console.log("No game found with the given ID in game fire .");
       return res.status(400).json({ message: "Invalid game state." });
     }
 
@@ -204,11 +210,13 @@ router.post("/:id/fire", authMiddleware, async (req, res) => {
     game.history.push({ username: loggedInUser, x: row, y: col });
 
     if (checkWin(game[targetGrid])) {
+      console.log("Game won! Updating status.");
       game.status = "completed";
 
       game.winner = loggedInUser; // Store only the username as a string
-      console.log("Game completed, winner:", loggedInUser);
+
       await game.save();
+      console.log("Game completed, winner:", loggedInUser);
     }
 
     // Switch turns

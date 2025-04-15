@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const path = require("path");
 const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
 
 dotenv.config({ path: path.resolve(__dirname, "./.env") });
 console.log("MONGO_URI:", process.env.MONGO_URI);
@@ -20,10 +21,13 @@ app.use(
 
 app.use(cookieParser());
 app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/games", require("./routes/games"));
 app.use("/api/scores", require("./routes/scores"));
+
 
 const frontendPath = path.join(__dirname, "../frontend/dist");
 app.use(express.static(frontendPath));

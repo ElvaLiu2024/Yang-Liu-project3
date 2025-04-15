@@ -10,4 +10,4 @@ const GameOver = ({ winner }) => {
   );
 };
 
-export default GameOver;
+export default GameOver;     

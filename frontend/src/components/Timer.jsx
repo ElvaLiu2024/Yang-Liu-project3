@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 
 const Timer = ({ initialTime, onTimeUp }) => {
-  const [timeLeft, setTimeLeft] = useState(
-    typeof initialTime === "number" ? initialTime : 0
-  );
+  const [timeLeft, setTimeLeft] = useState(initialTime);
 
   useEffect(() => {
-    // Reset timer if initialTime changes
     if (typeof initialTime === "number") {
       setTimeLeft(initialTime);
     }
